@@ -1,0 +1,64 @@
+name: Database
+
+# Test every schema change on a throwaway Postgres; deploy to Supabase only
+# from main, only after the tests pass, and only once the project is configured.
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/**', '.github/workflows/database.yml']
+  pull_request:
+    paths: ['supabase/**', '.github/workflows/database.yml']
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Supabase stand-ins (roles + auth.uid)
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/ci_bootstrap.sql
+
+      - name: Apply migrations in order
+        run: |
+          for f in $(ls supabase/migrations/*.sql | sort); do
+            echo "::group::$f"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+            echo "::endgroup::"
+          done
+
+      - name: Scenario test
+        run: psql -v ON_ERROR_STOP=1 -X -f supabase/tests/scenario_test.sql
+
+  deploy:
+    needs: test
+    # Skips until the repo variable SUPABASE_PROJECT_ID is set (Settings → Secrets and variables → Actions → Variables)
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.SUPABASE_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      # CLI 3.x targets the LOCAL db unless --remote is passed
+      - run: supabase db push --remote --yes
