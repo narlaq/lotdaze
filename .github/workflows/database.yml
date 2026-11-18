@@ -60,5 +60,6 @@ jobs:
         with:
           version: latest
       - run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --debug
+      - run: ls -la supabase/.temp; for f in supabase/.temp/*; do echo "== $f"; sed -E 's#(://[^:@]+):[^@]*@#\1:***@#' "$f"; echo; done
       # CLI 3.x targets the LOCAL db unless --remote is passed
       - run: supabase db push --remote --yes
