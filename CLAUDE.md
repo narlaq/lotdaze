@@ -39,7 +39,7 @@ psql -v ON_ERROR_STOP=1 -f supabase/tests/scenario_test.sql    # ends with ALL S
 ## Status (2026-11-17)
 - Done: schema 001–005 (riders, bikes, connections, orgs, events, locations, invites, RSVP/waitlist,
   check-ins, host updates, RLS, workflow functions, views); scenario test (27 checks); CI + deploy.
-- Next: Supabase project + repo secrets → first deploy; notifications; event chat; report/moderation
+- Next: Supabase project + scoped token (see README "Turning on deploys") + repo secrets → first deploy; notifications; event chat; report/moderation
   queue before any public beta; PWA front end (same plan as Rec'd It).
 - Name candidates: PullUp (favorite), Kickstand, RollCall, Twelve O'Clock, Clutch, Rev'd Up,
   Wheelie Down?, LotDaze. Availability (App Store, domains, trademark) not yet checked.

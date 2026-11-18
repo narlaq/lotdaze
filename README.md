@@ -74,7 +74,21 @@ Call from the client with `supabase.rpc('fn_submit_rsvp', { p_event, p_response:
 The test job runs on every push and PR right away. The deploy job is skipped until you configure it:
 
 1. Create a Supabase project (free tier is fine to start). Note its **project ref** (in the URL / Project Settings) and the **database password**.
-2. Create a personal access token at supabase.com → Account → Access Tokens.
+2. **Create a scoped personal access token** (this is what lets GitHub Actions log in to Supabase as you):
+   1. Go to <https://supabase.com/dashboard/account/tokens> (avatar → Account → **Access Tokens**) → **Generate new token**.
+   2. **Name:** `lotdaze-github-deploy` — so you know what it's for when you see it later.
+   3. **Expires in:** pick the longest you're comfortable with (max is 1 year). Put a reminder on your
+      calendar a week before; when it expires, deploys fail until you swap in a new one.
+   4. **Resources:** *selected projects* → only the LotDaze project. Not the whole org.
+   5. **Permissions:** start from the **No access** preset (the *Read-only* preset includes secrets),
+      then set these to **Read**: **Project Settings**, **API Keys**, **API Key Secrets**.
+      That's what `supabase link` needs. The migrations themselves run over the database
+      connection using `SUPABASE_DB_PASSWORD`, not through this token.
+   6. Check the review screen, generate, and **copy the token right away** (starts with `sbp_`) —
+      it's shown once. If you lose it, delete it and make another.
+   7. Don't create a *legacy* (full-account) token for this, and never paste the token in a file in the repo.
+   - If the deploy job later fails on a permissions error, edit nothing else — generate a new token
+     that also has **Database: Read-write** and replace the secret.
 3. In this repo: **Settings → Secrets and variables → Actions**
    - *Secrets*: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
    - *Variables*: `SUPABASE_PROJECT_ID` = the project ref
