@@ -59,6 +59,6 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --debug
       # CLI 3.x targets the LOCAL db unless --remote is passed
       - run: supabase db push --remote --yes
