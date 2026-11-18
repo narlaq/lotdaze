@@ -81,14 +81,14 @@ The test job runs on every push and PR right away. The deploy job is skipped unt
       calendar a week before; when it expires, deploys fail until you swap in a new one.
    4. **Resources:** *selected projects* → only the LotDaze project. Not the whole org.
    5. **Permissions:** start from the **No access** preset (the *Read-only* preset includes secrets),
-      then set these to **Read**: **Project Settings**, **API Keys**, **API Key Secrets**.
-      That's what `supabase link` needs. The migrations themselves run over the database
-      connection using `SUPABASE_DB_PASSWORD`, not through this token.
+      then set these to **Read**: **Project Settings**, **API Keys**, **API Key Secrets**, **Database**.
+      `supabase link` needs all four. Without **Database: Read** it links "successfully" but can't
+      fetch the IPv4 pooler address, and the deploy then fails with *IPv6 is not supported* —
+      GitHub's runners are IPv4-only. The migrations themselves run over the database connection
+      using `SUPABASE_DB_PASSWORD`, not through this token.
    6. Check the review screen, generate, and **copy the token right away** (starts with `sbp_`) —
       it's shown once. If you lose it, delete it and make another.
    7. Don't create a *legacy* (full-account) token for this, and never paste the token in a file in the repo.
-   - If the deploy job later fails on a permissions error, edit nothing else — generate a new token
-     that also has **Database: Read-write** and replace the secret.
 3. In this repo: **Settings → Secrets and variables → Actions**
    - *Secrets*: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
    - *Variables*: `SUPABASE_PROJECT_ID` = the project ref

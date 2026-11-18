@@ -59,7 +59,14 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --debug
-      - run: ls -la supabase/.temp; for f in supabase/.temp/*; do echo "== $f"; sed -E 's#(://[^:@]+):[^@]*@#\1:***@#' "$f"; echo; done
+      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      # GitHub runners are IPv4-only; Supabase's direct DB host is IPv6-only. link must save the
+      # IPv4 pooler address, which needs the token's Database permission (Read).
+      - name: Check IPv4 pooler address was saved
+        run: |
+          test -s supabase/.temp/pooler-url || {
+            echo "::error::supabase link did not save the IPv4 pooler address. Give the access token Database: Read (see README, Turning on deploys)."
+            exit 1
+          }
       # CLI 3.x targets the LOCAL db unless --remote is passed
       - run: supabase db push --remote --yes
